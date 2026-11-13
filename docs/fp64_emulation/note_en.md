@@ -1,6 +1,6 @@
 # FP64 emulation study plan (short version)
 
-2026-11-13. Full plan: https://claude.ai/artifact/RTZY7fZ7BVT3tBS7AJAzYe . Task list: `todo.md`. Chinese version: `note_zh.md`.
+2026-11-13. Task list: `todo.md`. Chinese version: `note_zh.md`.
 
 ## 1. Motivation
 

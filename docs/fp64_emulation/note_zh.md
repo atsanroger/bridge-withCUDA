@@ -1,6 +1,6 @@
 # FP64 emulation 研究計畫(精簡版)
 
-2026-11-13。原始計畫書:https://claude.ai/artifact/RTZY7fZ7BVT3tBS7AJAzYe 。待辦清單見 `todo.md`。英文版見 `note_en.md`。
+2026-11-13。待辦清單見 `todo.md`。英文版見 `note_en.md`。
 
 ## 1. 動機
 

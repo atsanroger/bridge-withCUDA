@@ -1,6 +1,6 @@
 # FP64 emulation TODO(eo-DWF CGNE,branch `feat/no-amg`)
 
-計畫書:https://claude.ai/artifact/RTZY7fZ7BVT3tBS7AJAzYe
+計畫內容見 `note_zh.md`(英文版 `note_en.md`)。
 
 目標：在 FP64 精度下，讓 CGNE 在 RTX / AI GPU 上從 FP64 算力受限變成頻寬受限。
 整條計算鏈都要 ≥ 48 bit(原生 double 或 float-float,不能有 FP32 環節)。
