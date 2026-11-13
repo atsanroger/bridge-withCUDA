@@ -1,18 +1,3 @@
-目前的BRIDGE++沒有CUDA支援，因此我獨立了一個分支，和RUTTICEQCD (https://github.com/atsanroger/RutticeQCD/tree/main) 並存
-
-作為兩種不同CUDA開發哲學的研究
-
-
-
-主要的研究方案有
-
-MDWF的AMG (主要在RUTTICEQCD，將考慮移植回BRIDGE++)
-2. EMULATION OF FLOAT-DOUBLET TO ACCERLATE COMPUTE BOUND SPMV SOLVER IN LATTICE QCD
-
-
-
-主要是要探討Ozaki的float-doublet scheme是否可以對於RTX/AI用GPU取得加速
-
 This project is a previous version used for testing CUDA on Bridge++. 
 Because the current version of Bridge++ lacks CUDA support, I separated this into an independent branch to coexist alongside RutticeQCD (https://github.com/atsanroger/RutticeQCD/tree/main), serving as a study of two different CUDA development philosophies.
 
