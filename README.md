@@ -1,77 +1,45 @@
-# Bridge C++ Codebase CMake & AMG Usage Guide
+目前的BRIDGE++沒有CUDA支援，因此我獨立了一個分支，和RUTTICEQCD (https://github.com/atsanroger/RutticeQCD/tree/main) 並存
 
-## 1. How to Use CMake
+作為兩種不同CUDA開發哲學的研究
 
-In this project, using CMake to configure and build is straightforward. We rely on CMake Presets to simplify the build commands for different environments and hardware architectures.
 
-### Configure
-Use the following command to generate the build files (Makefile or Ninja) using a preset:
-```bash
-cmake --preset <preset_name>
-```
 
-### Build
-After configuring, use the following command to compile the project:
-```bash
-cmake --build --preset <preset_name>
-```
-This automatically uses the parallel build jobs (e.g., `jobs: 8`) defined in the preset.
+主要的研究方案有
 
-## 2. CMake Presets Options
+MDWF的AMG (主要在RUTTICEQCD，將考慮移植回BRIDGE++)
+2. EMULATION OF FLOAT-DOUBLET TO ACCERLATE COMPUTE BOUND SPMV SOLVER IN LATTICE QCD
 
-The `CMakePresets.json` in the project defines build configurations for various environments. They are categorized into the following series:
 
-### CUDA Series (For NVIDIA GPUs)
-- `cuda-ampere-mpi`: For A100 / A6000 (sm_80/86), uses MPI + OpenMP (Release build, for production)
-- `cuda-ampere-debug`: For A100 / A6000 (sm_80/86), uses MPI (Debug build)
-- `cuda-hopper-mpi`: For H100 (sm_90), uses MPI + OpenMP (Release build, for production)
 
-### NVSHMEM Series (Multi-GPU Communication Optimization)
-- `nvshmem-ampere-mpi`: For A100 (sm_80), combining CUDA with NVSHMEM, uses MPI + OpenMP
-- `nvshmem-hopper-mpi`: For H100 (sm_90), combining CUDA with NVSHMEM, uses MPI + OpenMP
+主要是要探討Ozaki的float-doublet scheme是否可以對於RTX/AI用GPU取得加速
 
-### CPU (PC) Series
-- `pc-gnu-mpi`: CPU-only computation using GCC, Release build (MPI + OpenMP)
-- `pc-gnu-debug`: CPU-only computation using GCC, Debug build
+This project is a previous version used for testing CUDA on Bridge++. 
+Because the current version of Bridge++ lacks CUDA support, I separated this into an independent branch to coexist alongside RutticeQCD (https://github.com/atsanroger/RutticeQCD/tree/main), serving as a study of two different CUDA development philosophies.
 
-### OpenACC Series (OpenACC GPU Implementation)
-- `openacc-ampere-mpi`: For A100 (cc80), compiled with NVHPC `nvc++`, uses MPI + OpenMP
-- `openacc-hopper-mpi`: For H100 (cc90), compiled with NVHPC `nvc++`, uses MPI + OpenMP
+The main research topics include:
 
-### Other Platforms
-- `fugaku`: Configuration for the Fugaku supercomputer, uses Clang + FJMPI
+1.AMG for MDWF 
+(primarily implemented in RutticeQCD, with plans to consider porting it back to Bridge++)
 
-## 3. How to Start AMG
+2.Emulation of Float-Doublet to Accelerate Compute-Bound SpMV Solvers in Lattice QCD
 
-> [!WARNING]
-> **Important Note**: Currently, AMG (Algebraic Multigrid) is only supported on **CUDA**. Please ensure you are building with a CUDA preset (e.g., `cuda-ampere-mpi`) when running AMG tests.
+The primary objective is to investigate whether Ozaki's float-doublet scheme can achieve performance acceleration on RTX and AI-focused GPUs.
 
-The tests and executables for AMG are located in test directories such as `test_alt_amg_dw_GEMM` and `test_alt_dw_multigrid`.
+### Bug Reports
+If you discover any bugs, numerical discrepancies, or unexpected behavior, please:
+- email the author directly: `wlchenba@gmail.com`
 
-The basic steps to start and run AMG are as follows:
+## Acknowledgements
 
-1. **Build the Test**:
-   Make sure you have already built the base library via CMake. Then go to an AMG test directory (e.g., `test_alt_amg_dw_GEMM`). If you need to compile the test separately, run:
-   ```bash
-   cd test_alt_amg_dw_GEMM
-   make
-   ```
-   *(Note: This typically generates an executable named `bridge_test_alt` inside the `build/` directory.)*
+This project draws heavily on [Bridge++](https://bridge.kek.jp/Lattice-code/)
+If you use this repo to publish, please cite Bridge++ as its developers ask of its own
+users: J. Phys. Conf. Ser. 523 (2014) 012046 and J. Phys. Conf. Ser. 2207 (2022) 012053, and
+its website, <https://bridge.kek.jp/Lattice-code/>.
 
-2. **Enter the Run Directory**:
-   Tests are usually executed inside the `run` folder, which contains the necessary configuration files:
-   ```bash
-   cd test_alt_amg_dw_GEMM/run
-   ```
+## License
 
-3. **Run the Executable**:
-   Inside the `run` directory, there is usually an executable named `exe` or a symlink to the built `bridge_test_alt`. 
-   Run it alongside a YAML configuration file via MPI (or directly, depending on your environment):
-   ```bash
-   # For single GPU / direct execution
-   ./exe test_alt_Multigrid.yaml
-   
-   # For multi-GPU execution using MPI
-   mpirun -np <number_of_processes> ./exe test_alt_Multigrid.yaml
-   ```
-   *Note: You can adjust the AMG grid levels, solver parameters, and other settings by editing the YAML file. The `run` directory also contains historical log files (e.g., `run_amg.log`) that you can reference.*
+The code is GPL-3.0-or-later; see [LICENSE](LICENSE). The multigrid note in
+`docs/mg_background/` (text, PDF, figures made here, data) is CC BY 4.0, also in the
+earlier releases, except three figures reproduced from PoS LATTICE2024 (2025) 414, which
+keep their CC BY-NC-ND 4.0; see [docs/mg_background/LICENSE](docs/mg_background/LICENSE).
+
