@@ -55,5 +55,5 @@ add_subdirectory(src)
 add_subdirectory(tests)
 
 # ----------- Standalone test_alt_* programs -----------
-# (the foreach + the batched-AMG bridgecuda_mrhs link).  See cmake/BridgeAltTests.cmake.
+# (the foreach over the test_alt_* directories).  See cmake/BridgeAltTests.cmake.
 include(BridgeAltTests)

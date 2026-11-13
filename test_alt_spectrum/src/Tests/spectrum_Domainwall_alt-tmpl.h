@@ -171,10 +171,6 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
   vout.general(m_vl, "   number_of_smearing: %d\n", number_of_smearing);
   vout.general(m_vl, "  vlevel       = %s\n", str_vlevel.c_str());
 
-  if(str_smear_type == "None"){
-    vout.general(m_vl, "skip smearing\n");
-    return;
-  }
   // configuration setup.
   U.reset(new Field_G(Nvol, Ndim));
   setup_config(U, params_test);
@@ -189,7 +185,11 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
   timer_smearing.reset();
   timer_smearing.start();
 
-  apply_smearing(U.get(), params_smearing);
+  if (str_smear_type == "None") {
+    vout.general(m_vl, "skip smearing\n");
+  } else {
+    apply_smearing(U.get(), params_smearing);
+  }
   double plaq_smear=calc_plaquette(U.get());
 
   timer_smearing.stop();

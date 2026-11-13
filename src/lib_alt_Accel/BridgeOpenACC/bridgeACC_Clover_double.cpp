@@ -23,7 +23,6 @@ namespace BridgeACC {
 
 #include "src/mult_Clover_openacc2-inc.h"
 #include "src/mult_CloverTerm_openacc-inc.h"
-#include "src/mult_Clover_dd_openacc2-inc.h"
 
 }
 

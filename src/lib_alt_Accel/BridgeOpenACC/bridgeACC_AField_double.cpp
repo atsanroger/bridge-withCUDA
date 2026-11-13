@@ -17,7 +17,6 @@ namespace BridgeACC {
 #include "src/afield_Gauge_openacc-inc.h"
 #include "src/index_eo_alt_openacc-inc.h"
 #include "src/shiftAField_lex_openacc-inc.h"
-#include "src/afield_dd_openacc-inc.h"
 
 }
 

@@ -21,7 +21,6 @@ namespace BridgeACC {
 
 #include "src/mult_Domainwall_5din_openacc-inc.h"
 #include "src/mult_Domainwall_5din_eo_openacc-inc.h"
-#include "src/mult_Domainwall_5din_dd_openacc-inc.h"
 #include "src/mult_Domainwall_5din_openacc2-inc.h"
 
 #include "src/mult_Domainwall_5din_eo_inv_openacc-inc.h"

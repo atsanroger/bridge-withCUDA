@@ -22,7 +22,6 @@ namespace BridgeACC {
 
 #include "src/mult_Wilson_cuda-inc.h"
 #include "src/mult_Wilson_cuda2-inc.h"
-#include "src/mult_Wilson_dd_cuda-inc.h"
 #include "src/mult_Wilson_cuda_qdw-inc.h"
 
 //====================================================================

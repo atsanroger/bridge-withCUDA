@@ -25,7 +25,6 @@ namespace BridgeACC {
 #include "src/mult_Wilson_eo_openacc2-inc.h"
 #include "src/mult_Wilson_openacc-inc.h"
 #include "src/mult_Wilson_eo_openacc-inc.h"
-#include "src/mult_Wilson_dd_openacc-inc.h"
 
 }
 

@@ -25,7 +25,6 @@ namespace BridgeACC {
 
 #include "src/mult_Clover_cuda-inc.h"
 //#include "src/mult_CloverTerm_cuda-inc.h"
-#include "src/mult_Clover_dd_cuda-inc.h"
 
 
 }

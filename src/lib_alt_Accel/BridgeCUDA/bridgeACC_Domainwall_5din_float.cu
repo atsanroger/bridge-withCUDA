@@ -28,7 +28,6 @@ namespace BridgeACC {
 
 #include "src/mult_Domainwall_5din_cuda-inc.h"
 #include "src/mult_Domainwall_5din_eo_cuda-inc.h"
-#include "src/mult_Domainwall_5din_dd_cuda-inc.h"
 #include "src/mult_Domainwall_5din_cuda2-inc.h"
 #include "src/mult_Domainwall_5din_eo_inv_cuda-inc.h"
 

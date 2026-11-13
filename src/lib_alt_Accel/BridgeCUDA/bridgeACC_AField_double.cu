@@ -20,7 +20,6 @@ namespace BridgeACC {
 
 #include "src/afield_cuda-inc.h"
 #include "src/aindex_eo_alt_cuda-inc.h"
-#include "src/afield_dd_cuda-inc.h"
 #include "src/afield_Gauge_cuda-inc.h"
 #include "src/shiftAField_lex_cuda-inc.h"
 
