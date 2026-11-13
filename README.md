@@ -10,6 +10,8 @@ The main research topics include:
 
 The primary objective is to investigate whether Ozaki's float-doublet scheme can achieve performance acceleration on RTX and AI-focused GPUs.
 
+Based on the idea from (https://arxiv.org/pdf/2510.13536) D,Mukunoki and K,Ozaki.
+
 ### Bug Reports
 If you discover any bugs, numerical discrepancies, or unexpected behavior, please:
 - email the author directly: `wlchenba@gmail.com`
