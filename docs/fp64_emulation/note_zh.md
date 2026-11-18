@@ -71,7 +71,7 @@ g = min( I / R , 64 / k )
 ## 6. 範圍與程式
 
 - 範圍:eo-DWF CGNE。Bridge++ 沒有 RutticeQCD 那套 AMG,AMG 留作 future work。
-- Bridge++ 程式:舊 bridge_cuda CUDA fork 的 `feat/no-amg` branch(main 去掉所有 AMG,保留 QDW/QTW)。不移植到 Bridge 2.1.3 OpenACC。
+- Bridge++ 程式:舊 bridge_cuda CUDA fork 的 `feat/double-emulation` branch(main 去掉所有 AMG,保留 QDW/QTW)。不移植到 Bridge 2.1.3 OpenACC。
 - 第二個實驗軸:RutticeQCD(大量 kernel fusion)對照 Bridge++ alt_Accel(不 fuse)。
 - Bridge++ 的 DdagD 每次約 14 個 kernel:5dir、hopb、LU_inv 各 4 次，加上 copy/axpy。5dir 和 hopb 沒有 merge;γ5 不在 CGNE 路徑上。
 

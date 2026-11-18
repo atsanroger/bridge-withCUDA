@@ -71,7 +71,7 @@ The following estimates use intensities that we have not measured:
 ## 6. Scope and code
 
 - The scope is eo-DWF CGNE. Bridge++ lacks the RutticeQCD AMG, so AMG is future work.
-- The Bridge++ code is the `feat/no-amg` branch of the bridge_cuda CUDA fork. This branch removes all AMG code from main and keeps QDW/QTW. We do not port it to Bridge 2.1.3 OpenACC.
+- The Bridge++ code is the `feat/double-emulation` branch of the bridge_cuda CUDA fork. This branch removes all AMG code from main and keeps QDW/QTW. We do not port it to Bridge 2.1.3 OpenACC.
 - The second experimental axis compares RutticeQCD (heavy kernel fusion) with Bridge++ alt_Accel (no fusion).
 - One Bridge++ DdagD call launches about 14 kernels: 4 each of 5dir, hopb and LU_inv, plus copy and axpy. The 5dir and hopb kernels are separate. γ5 is not on the CGNE path.
 
