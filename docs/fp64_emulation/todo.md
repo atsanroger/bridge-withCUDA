@@ -15,7 +15,7 @@ ncu 要在原生 Linux 上跑，不能用 WSL2。
   4 次 5dir/5dirdag、4 次 hopb、4 次 LU_inv/LUdag_inv、2 次 copy+axpy。
 - 5dir 和 hopb **沒有** merge:5dir 把 y 寫到 global 的 `m_w1`,hopb 再讀回來。LU_inv 也是獨立 kernel。
 - hopb 有 `jgm5` 參數可以把 γ5 併進去，但 `D_eo` / `Ddag_eo` 都傳 0。CGNE 的 DdagD 路徑沒有用到 γ5。
-- Bridge++ 這一側保持不 fuse,作為和 RutticeQCD(大量 kernel fusion)對照的那一軸。**不要在 Bridge++ 裡動手 merge。**
+- 保持不 fuse,**不要動手 merge**。emulation 是要讓 kernel 回到 memory bound;融合後暫存器壓力更大，用 float-float 更容易 spill,spill 的流量會讓已經 memory bound 的 kernel 更慢(推論，未量測)。
 
 ## 各 kernel 強度估計(未量測)
 
