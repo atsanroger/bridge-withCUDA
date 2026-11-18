@@ -58,6 +58,11 @@ ncu 要在原生 Linux 上跑，不能用 WSL2。
 
 ## 延後(先不做)
 
+- lowendgpu 在多 process(有 halo)時，邊界那幾段 kernel 仍是 double,而且不會報錯(QDW/QTW 會 exit)。單 GPU 研究不受影響;要用 MPI 前，先比照 QDW/QTW 加上報錯，或寫 hyb 版的邊界 kernel。
+- `hyb_split` 在 |x| < 2⁻⁷⁵ 時丟掉 lo(只剩 24 bit),|x| < 2⁻¹²⁶ 時歸零。就 norm 而言可以忽略;可能受影響的只有本身就小於約 1e-23 的分量(例如離 source 很遠的 propagator)。推論，未測試。
+- hyb 的 `double * hyb_ff` 只在係數是 ±1、2 時精確。在 hop include 裡加入其他係數(例如 κ)之前，要先改這個運算子。
+- 3080 上重量 hopb v1 對 v2(`BRIDGE_HOPB_V2=1`),決定預設。A30 上 v1 較快。
+
 - 測 QTW `Renormalize3`(`bridgeACC_AField.h:190`)的 non-overlap 違反率。它是 3 次 TwoSum,少了 Kouya RenormBF-pair(arXiv:2609.35844)最上面那一步 FastTwoSum(h, m)。
   用 Kouya 的 [II] 類輸入，和 MPFR 比對。
   和小質量 QTW floor 變差(mq 0.025:1.3e-28,mq 0.10:5e-37)有沒有關係，目前只是假設。
