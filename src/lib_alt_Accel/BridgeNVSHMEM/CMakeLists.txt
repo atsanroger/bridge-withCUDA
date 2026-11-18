@@ -11,8 +11,6 @@ set(BRIDGENVSHMEM_SOURCES
     bridgeACC_Clover_float.cu
     bridgeACC_CloverTerm_double.cu
     bridgeACC_CloverTerm_float.cu
-    bridgeACC_Clover_coarse_double.cu
-    bridgeACC_Clover_coarse_float.cu
     bridgeACC_Domainwall_5din_double.cu
     bridgeACC_Domainwall_5din_float.cu
 )
