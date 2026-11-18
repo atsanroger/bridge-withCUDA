@@ -70,7 +70,7 @@ g = min( I / R , 64 / k )
 ## 6. 範圍與程式
 
 - 範圍:eo-DWF CGNE。AMG 留作 future work。
-- Bridge++ 程式:舊 bridge_cuda CUDA fork 的 `feat/double-emulation` branch(main 去掉所有 AMG,保留 QDW/QTW)。不移植到 Bridge 2.1.3 OpenACC。
+- Bridge++ 程式:bridge_cuda CUDA fork 的 `main`(沒有 AMG,保留 QDW/QTW)。RutticeQCD multigrid 的移植在 `feat/ruttice-mg-port` 分支進行。不移植到 Bridge 2.1.3 OpenACC。
 - Bridge++ 的 DdagD 每次約 14 個 kernel:5dir、hopb、LU_inv 各 4 次，加上 copy/axpy。5dir 和 hopb 沒有 merge;γ5 不在 CGNE 路徑上。
 - 不做 kernel fusion。emulation 的目的是讓 RTX 上 FP64 算力受限的 kernel 回到頻寬上限。融合後的 kernel 暫存器壓力更大，換成 float-float 後更容易 spill;spill 的 local memory 流量直接加在這個頻寬上限上，使已經是 memory bound 的 kernel 更慢。所以 fusion 不適合和 emulation 搭配。這是推論，沒有量測。
 

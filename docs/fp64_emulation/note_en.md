@@ -70,7 +70,7 @@ The following estimates use intensities that we have not measured:
 ## 6. Scope and code
 
 - The scope is eo-DWF CGNE. AMG is future work.
-- The Bridge++ code is the `feat/double-emulation` branch of the bridge_cuda CUDA fork. This branch removes all AMG code from main and keeps QDW/QTW. We do not port it to Bridge 2.1.3 OpenACC.
+- The Bridge++ code is the `main` branch of the bridge_cuda CUDA fork. It has no AMG code and keeps QDW/QTW. The port of the RutticeQCD multigrid starts on the branch `feat/ruttice-mg-port`. We do not port it to Bridge 2.1.3 OpenACC.
 - One Bridge++ DdagD call launches about 14 kernels: 4 each of 5dir, hopb and LU_inv, plus copy and axpy. The 5dir and hopb kernels are separate. γ5 is not on the CGNE path.
 - We do not fuse kernels. Emulation aims to bring a kernel that is FP64-compute-bound on RTX back to the bandwidth limit. A fused kernel has higher register pressure and spills more easily in float-float. The spill traffic to local memory adds to the bytes of a kernel that is already memory-bound, so it runs slower. We therefore regard fusion as unsuitable together with emulation. This is an inference that we have not measured.
 
