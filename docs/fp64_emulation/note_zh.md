@@ -65,15 +65,14 @@ g = min( I / R , 64 / k )
 
 | kernel | I (flop/B) | 3080 | B300 |
 |---|---|---|---|
-| Ruttice 1-pass MDWF | ~1.2 | ~2× | ~7× |
 | Bridge++ eo hop | ~0.5–0.7 | ~1× | ~3–4× |
 
 ## 6. 範圍與程式
 
-- 範圍:eo-DWF CGNE。Bridge++ 沒有 RutticeQCD 那套 AMG,AMG 留作 future work。
+- 範圍:eo-DWF CGNE。AMG 留作 future work。
 - Bridge++ 程式:舊 bridge_cuda CUDA fork 的 `feat/double-emulation` branch(main 去掉所有 AMG,保留 QDW/QTW)。不移植到 Bridge 2.1.3 OpenACC。
-- 第二個實驗軸:RutticeQCD(大量 kernel fusion)對照 Bridge++ alt_Accel(不 fuse)。
 - Bridge++ 的 DdagD 每次約 14 個 kernel:5dir、hopb、LU_inv 各 4 次，加上 copy/axpy。5dir 和 hopb 沒有 merge;γ5 不在 CGNE 路徑上。
+- 不做 kernel fusion。emulation 的目的是讓 RTX 上 FP64 算力受限的 kernel 回到頻寬上限。融合後的 kernel 暫存器壓力更大，換成 float-float 後更容易 spill;spill 的 local memory 流量直接加在這個頻寬上限上，使已經是 memory bound 的 kernel 更慢。所以 fusion 不適合和 emulation 搭配。這是推論，沒有量測。
 
 ## 7. 假說
 
@@ -81,16 +80,14 @@ g = min( I / R , 64 / k )
 - **H2(組合)**:整體加速可由各 kernel 時間佔比以 Amdahl 預測，誤差 ≤ 20%。
 - **H3(精度)**:選擇性 emulation 的真殘差 floor 和 FP64 差距在 ‖r‖ 的 2⁵ 倍內(48 對 53 bit),迭代數相同，觀測量一致。
 - **H4(實作)**:float-float kernel 的暫存器數 ≤ double 版且不 spill,才能跑到頻寬上限。
-- **H5(fusion × emulation)**:fusion 減少位元組、不減 flop,會提高 I,所以融合版從 emulation 獲益較多;但暫存器較多，較容易 spill。
 
 ## 8. 實驗
 
 | 實驗 | 對照 | 量什麼 |
 |---|---|---|
-| E1 | Ruttice 1-pass 對 2-pass MDWF,各有 double 與 float-float | I、時間、暫存器 |
-| E2 | Ruttice 對 Bridge++,同格點、config、mq、Ls 的 CGNE | D、DdagD、每 iteration 時間、完整 solve |
-| E3 | 低精度前處理不變，只換 outer 的 FP64 算術 | 驗證兩者可疊加 |
-| E4 | 原生 FP64 對選擇性 emulation,mq 掃描 | 真殘差曲線、觀測量、HMC ΔH |
+| E1 | FP64、lowendgpu(double 儲存，只有 hopb 用 float-float)、全程 float-float(QDW),同格點、config、mq、Ls 的 CGNE | D、DdagD、每 iteration 時間、完整 solve |
+| E2 | 低精度前處理不變，只換 outer 的 FP64 算術 | 驗證兩者可疊加 |
+| E3 | 原生 FP64 對選擇性 emulation,mq 掃描 | 真殘差曲線、觀測量、HMC ΔH |
 
 階段:
 1. RTX 上 ncu 剖析(原生 Linux),A30 對照，產出 kernel × 硬體決策表。
@@ -113,7 +110,7 @@ g = min( I / R , 64 / k )
 
 ## 10. 主要風險
 
-- float-float kernel 暫存器過多而 spill(Ruttice double `hop_gemm_kernel` 已用 168 個)。
+- float-float kernel 暫存器過多而 spill。
 - 強度和規格數字都還沒量測，決策表可能要改。
 - 沒有 B300 機器時，主要情境只能投影，文中要標明。
 - float-float 少 5 bit,指數範圍和 float 相同(約 1e-38),極小值可能 underflow。

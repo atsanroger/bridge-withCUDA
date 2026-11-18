@@ -65,15 +65,14 @@ The following estimates use intensities that we have not measured:
 
 | Kernel | I (flop/B) | 3080 | B300 |
 |-|-|-|-|
-| Ruttice 1-pass MDWF | ~1.2 | ~2× | ~7× |
 | Bridge++ eo hop | ~0.5–0.7 | ~1× | ~3–4× |
 
 ## 6. Scope and code
 
-- The scope is eo-DWF CGNE. Bridge++ lacks the RutticeQCD AMG, so AMG is future work.
+- The scope is eo-DWF CGNE. AMG is future work.
 - The Bridge++ code is the `feat/double-emulation` branch of the bridge_cuda CUDA fork. This branch removes all AMG code from main and keeps QDW/QTW. We do not port it to Bridge 2.1.3 OpenACC.
-- The second experimental axis compares RutticeQCD (heavy kernel fusion) with Bridge++ alt_Accel (no fusion).
 - One Bridge++ DdagD call launches about 14 kernels: 4 each of 5dir, hopb and LU_inv, plus copy and axpy. The 5dir and hopb kernels are separate. γ5 is not on the CGNE path.
+- We do not fuse kernels. Emulation aims to bring a kernel that is FP64-compute-bound on RTX back to the bandwidth limit. A fused kernel has higher register pressure and spills more easily in float-float. The spill traffic to local memory adds to the bytes of a kernel that is already memory-bound, so it runs slower. We therefore regard fusion as unsuitable together with emulation. This is an inference that we have not measured.
 
 ## 7. Hypotheses
 
@@ -81,16 +80,14 @@ The following estimates use intensities that we have not measured:
 - **H2 (composition).** Amdahl's law predicts the total speedup from the kernel time fractions within 20%.
 - **H3 (accuracy).** With selective emulation, the true residual floor stays within 2⁵ of FP64 in ‖r‖ (48 against 53 bits). The iteration count and observables match FP64.
 - **H4 (implementation).** A float-float kernel reaches the bandwidth limit only if it uses no more registers than the double kernel and does not spill.
-- **H5 (fusion and emulation).** Fusion reduces bytes and keeps flops, so it raises I. The fused code should gain more from emulation. It also uses more registers and is more likely to spill.
 
 ## 8. Experiments
 
 | Experiment | Comparison | Quantities |
 |-|-|-|
-| E1 | Ruttice 1-pass against 2-pass MDWF, each in double and float-float | I, time, registers |
-| E2 | Ruttice against Bridge++ CGNE with the same lattice, configuration, mq and Ls | D, DdagD, time per iteration, full solve |
-| E3 | Same low-precision preconditioner, outer FP64 arithmetic native or emulated | Whether the two combine |
-| E4 | Native FP64 against selective emulation over a mass scan | True residual history, observables, HMC ΔH |
+| E1 | FP64, lowendgpu (double storage, float-float arithmetic in hopb only) and full-chain float-float (QDW), CGNE with the same lattice, configuration, mq and Ls | D, DdagD, time per iteration, full solve |
+| E2 | Same low-precision preconditioner, outer FP64 arithmetic native or emulated | Whether the two combine |
+| E3 | Native FP64 against selective emulation over a mass scan | True residual history, observables, HMC ΔH |
 
 The work has four phases:
 1. We profile with ncu on RTX under native Linux, with the A30 as control. The output is a kernel × hardware decision table.
@@ -113,7 +110,7 @@ The lattice size (24⁴ or 24³×48) and Ls (8 or 16) are still open.
 
 ## 10. Main risks
 
-- Float-float kernels may need too many registers and spill. The Ruttice double `hop_gemm_kernel` already uses 168 registers.
+- Float-float kernels may need too many registers and spill.
 - We have not measured the intensities or the hardware figures, so the decision table may change.
 - Without a B300 machine, the main scenario rests on projection, and the paper must state this.
 - Float-float has 5 fewer mantissa bits than double and the exponent range of float (about 1e-38). Very small values may underflow.

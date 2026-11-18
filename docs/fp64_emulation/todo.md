@@ -15,7 +15,7 @@ ncu 要在原生 Linux 上跑，不能用 WSL2。
   4 次 5dir/5dirdag、4 次 hopb、4 次 LU_inv/LUdag_inv、2 次 copy+axpy。
 - 5dir 和 hopb **沒有** merge:5dir 把 y 寫到 global 的 `m_w1`,hopb 再讀回來。LU_inv 也是獨立 kernel。
 - hopb 有 `jgm5` 參數可以把 γ5 併進去，但 `D_eo` / `Ddag_eo` 都傳 0。CGNE 的 DdagD 路徑沒有用到 γ5。
-- Bridge++ 這一側保持不 fuse,作為和 RutticeQCD(大量 kernel fusion)對照的那一軸。**不要在 Bridge++ 裡動手 merge。**
+- 保持不 fuse,**不要動手 merge**。emulation 是要讓 kernel 回到 memory bound;融合後暫存器壓力更大，用 float-float 更容易 spill,spill 的流量會讓已經 memory bound 的 kernel 更慢(推論，未量測)。
 
 ## 各 kernel 強度估計(未量測)
 
@@ -57,6 +57,11 @@ ncu 要在原生 Linux 上跑，不能用 WSL2。
 - [ ] 用 roofline 模型預測加速，目標誤差在 20% 以內
 
 ## 延後(先不做)
+
+- lowendgpu 在多 process(有 halo)時，邊界那幾段 kernel 仍是 double,而且不會報錯(QDW/QTW 會 exit)。單 GPU 研究不受影響;要用 MPI 前，先比照 QDW/QTW 加上報錯，或寫 hyb 版的邊界 kernel。
+- `hyb_split` 在 |x| < 2⁻⁷⁵ 時丟掉 lo(只剩 24 bit),|x| < 2⁻¹²⁶ 時歸零。就 norm 而言可以忽略;可能受影響的只有本身就小於約 1e-23 的分量(例如離 source 很遠的 propagator)。推論，未測試。
+- hyb 的 `double * hyb_ff` 只在係數是 ±1、2 時精確。在 hop include 裡加入其他係數(例如 κ)之前，要先改這個運算子。
+- 3080 上重量 hopb v1 對 v2(`BRIDGE_HOPB_V2=1`),決定預設。A30 上 v1 較快。
 
 - 測 QTW `Renormalize3`(`bridgeACC_AField.h:190`)的 non-overlap 違反率。它是 3 次 TwoSum,少了 Kouya RenormBF-pair(arXiv:2609.35844)最上面那一步 FastTwoSum(h, m)。
   用 Kouya 的 [II] 類輸入，和 MPFR 比對。
