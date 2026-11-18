@@ -278,11 +278,11 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
   {
     std::string mw = "FP";
     params_solver.fetch_string("multiword_mode", mw);
-    std::string field, ext, hop = "double";
+    std::string field, ext;
     if (mw == "FP") {
       field = mode;                      // keep the caller's field_type
     } else if (mw == "lowendgpu") {
-      field = "double_eo"; hop = "float_float";
+      field = "double_eo";
       params_solver.set_string("multiword_mode", "FP");
     } else if (mw == "DW" || mw == "TW") {
       field = "float_eo";  ext = "true";
@@ -307,10 +307,10 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
       }
       params_fopr.set_string("extended_precision", ext);
     }
-    params_fopr.set_string("hopping_arithmetic", hop);
+    params_fopr.set_string("multiword_mode", mw);  // the Fopr reads lowendgpu from it
     mode = field;
-    vout.general(m_vl, "multiword_mode = %s: field_type = %s, extended_precision = %s, hopping_arithmetic = %s\n",
-                 mw.c_str(), field.c_str(), ext.empty() ? "(yaml/default)" : ext.c_str(), hop.c_str());
+    vout.general(m_vl, "multiword_mode = %s: field_type = %s, extended_precision = %s\n",
+                 mw.c_str(), field.c_str(), ext.empty() ? "(yaml/default)" : ext.c_str());
   }
 
   // To confirm the alt operator works same as corelib.

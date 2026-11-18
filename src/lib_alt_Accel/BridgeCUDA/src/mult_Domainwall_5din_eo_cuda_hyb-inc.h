@@ -14,6 +14,8 @@
   the local variables and the load wrapper differ from
   mult_domainwall_5din_eo_hopb_dirac_5D_kernel.
 
+  su3_reconstruction is honoured as in the native kernel (template RECON).
+
   Precision: hi carries 24 bits, lo the next 24 bits (rounded from 29), so a
   loaded double keeps about 48 bits.  Values with |x| below about 2^-74 lose
   lo (exponent range of float), and |x| < 2^-126 is flushed to zero;
@@ -144,6 +146,9 @@ struct hyb_view_t {
 };
 
 //====================================================================
+// RECON (YAML su3_reconstruction): rebuild column 2 of each link (in
+// float-float) instead of reading it.
+template<bool RECON>
 __global__
 void mult_domainwall_5din_eo_hopb_hyb_dirac_5D_kernel(
   real_t * __restrict__ vp, const real_t * __restrict__ up, const real_t * __restrict__ wp,
@@ -230,9 +235,119 @@ void mult_domainwall_5din_eo_hopb_hyb_dirac_5D_kernel(
   }
 }
 
+// v2 of the hybrid hopb: the block structure of
+// mult_domainwall_5din_eo_hopb_dirac_5D_v2_kernel (NS_PER_BLOCK warps share the
+// 12 gauge reals of a 32-site block through shared memory, column 2 rebuilt).
+// The loading warp splits each double once and stores (hi, lo) as float2;
+// the other warps read the pair directly.
+struct hyb_sh_ref {
+  float2 *p;
+  __device__ __forceinline__ hyb_sh_ref& operator=(real_t x) {
+    const hyb_ff h = hyb_split(x);
+    p->x = h.hi;
+    p->y = h.lo;
+    return *this;
+  }
+  __device__ __forceinline__ operator hyb_ff() const { return hyb_make(p->x, p->y); }
+};
+
+struct hyb_sh_t {
+  float2 *p;
+  __device__ __forceinline__ hyb_sh_ref operator[](int i) const { hyb_sh_ref r; r.p = p + i; return r; }
+};
+
+// One block per SM in the launch bound: with LB_BLOCKS_PER_SM (2) the
+// float-float body is capped at 128 registers and spills (48 B stack, sm_86).
+#ifndef HYB_LB_BLOCKS_PER_SM
+#define HYB_LB_BLOCKS_PER_SM 1
+#endif
+__global__ __launch_bounds__(NWP * NS_PER_BLOCK, HYB_LB_BLOCKS_PER_SM)
+void mult_domainwall_5din_eo_hopb_hyb_dirac_5D_v2_kernel(
+  real_t * __restrict__ vp, const real_t * __restrict__ up, const real_t * __restrict__ wp,
+  int Ns,
+  int bc_x, int bc_y, int bc_z, int bc_t,
+  int Nx, int Ny, int Nz, int Nt,
+  int ieo, int jeo,
+  int do_comm_x, int do_comm_y, int do_comm_z, int do_comm_t,
+  int Nst_pad, int jgm5){
+
+  const int Nxy   = Nx * Ny;
+  const int Nst   = Nx * Ny * Nz * Nt;
+  const int Nxyz  = Nx * Ny * Nz;
+
+  const int lane     = threadIdx.x;
+  const int is_local = threadIdx.y;
+  const int idx_out  = blockIdx.x;
+  const int is_base  = blockIdx.y * NS_PER_BLOCK;
+  const int is       = is_base + is_local;
+  const int site     = lane + NWP * idx_out;
+
+  const real_t * u_up = up;
+  const real_t * u_dn = up;
+
+  __shared__ float2 u_sh_store[12 * NWP];
+  hyb_sh_t u_sh; u_sh.p = u_sh_store;
+
+  int ix   = site % Nx;
+  int iyzt = site / Nx;
+  int iy   = iyzt % Ny;
+  int izt  = site / Nxy;
+  int iz   = izt  % Nz;
+  int it   = izt  / Nz;
+  int ixyz = site % Nxyz;
+  int keo  = (jeo + iy + iz + it) % 2;
+  int idir;
+
+  hyb_ff u_0, u_1, u_2, u_3, u_4, u_5;
+  hyb_ff u_6, u_7, u_8, u_9, u10, u11;
+  hyb_ff u12, u13, u14, u15, u16, u17;
+  hyb_ff vt1_0, vt1_1, vt1_2, vt1_3, vt1_4, vt1_5;
+  hyb_ff vt2_0, vt2_1, vt2_2, vt2_3, vt2_4, vt2_5;
+  hyb_ff wt1r, wt1i, wt2r, wt2i;
+
+  hyb_ff v2_01, v2_11, v2_21, v2_31, v2_41, v2_51;
+  hyb_ff v2_02, v2_12, v2_22, v2_32, v2_42, v2_52;
+  hyb_ff v2_03, v2_13, v2_23, v2_33, v2_43, v2_53;
+  hyb_ff v2_04, v2_14, v2_24, v2_34, v2_44, v2_54;
+
+  hyb_view_t v1; v1.p = wp;
+  real_t * v2 = vp;
+
+  #include "inc/mult_Domainwall_eo_cuda_xyz_shmem-inc.h"
+  #include "inc/mult_Domainwall_eo_cuda_t_dirac_shmem-inc.h"
+
+  hyb_store(v2[IDX2_SP_5D_R(0,0,is,Ns,site)], v2_01);
+  hyb_store(v2[IDX2_SP_5D_I(0,0,is,Ns,site)], v2_11);
+  hyb_store(v2[IDX2_SP_5D_R(1,0,is,Ns,site)], v2_21);
+  hyb_store(v2[IDX2_SP_5D_I(1,0,is,Ns,site)], v2_31);
+  hyb_store(v2[IDX2_SP_5D_R(2,0,is,Ns,site)], v2_41);
+  hyb_store(v2[IDX2_SP_5D_I(2,0,is,Ns,site)], v2_51);
+
+  hyb_store(v2[IDX2_SP_5D_R(0,1,is,Ns,site)], v2_02);
+  hyb_store(v2[IDX2_SP_5D_I(0,1,is,Ns,site)], v2_12);
+  hyb_store(v2[IDX2_SP_5D_R(1,1,is,Ns,site)], v2_22);
+  hyb_store(v2[IDX2_SP_5D_I(1,1,is,Ns,site)], v2_32);
+  hyb_store(v2[IDX2_SP_5D_R(2,1,is,Ns,site)], v2_42);
+  hyb_store(v2[IDX2_SP_5D_I(2,1,is,Ns,site)], v2_52);
+
+  hyb_store(v2[IDX2_SP_5D_R(0,2,is,Ns,site)], v2_03);
+  hyb_store(v2[IDX2_SP_5D_I(0,2,is,Ns,site)], v2_13);
+  hyb_store(v2[IDX2_SP_5D_R(1,2,is,Ns,site)], v2_23);
+  hyb_store(v2[IDX2_SP_5D_I(1,2,is,Ns,site)], v2_33);
+  hyb_store(v2[IDX2_SP_5D_R(2,2,is,Ns,site)], v2_43);
+  hyb_store(v2[IDX2_SP_5D_I(2,2,is,Ns,site)], v2_53);
+
+  hyb_store(v2[IDX2_SP_5D_R(0,3,is,Ns,site)], v2_04);
+  hyb_store(v2[IDX2_SP_5D_I(0,3,is,Ns,site)], v2_14);
+  hyb_store(v2[IDX2_SP_5D_R(1,3,is,Ns,site)], v2_24);
+  hyb_store(v2[IDX2_SP_5D_I(1,3,is,Ns,site)], v2_34);
+  hyb_store(v2[IDX2_SP_5D_R(2,3,is,Ns,site)], v2_44);
+  hyb_store(v2[IDX2_SP_5D_I(2,3,is,Ns,site)], v2_54);
+}
+
 void mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
     real_t *vp, real_t *up, real_t *wp, int Ns, int *bc,
-    int *Nsize, int *do_comm, int ieo, int jeo, int jgm5)
+    int *Nsize, int *do_comm, int ieo, int jeo, int jgm5, bool recon)
 {
   int Nx = Nsize[0];
   int Ny = Nsize[1];
@@ -248,7 +363,24 @@ void mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
   int blockSize = VECTOR_LENGTH;
   int gridSize  = (Nst_pad * Ns + blockSize - 1) / blockSize;
 
-  mult_domainwall_5din_eo_hopb_hyb_dirac_5D_kernel<<<gridSize, blockSize>>>(
+  // Same launcher choice as the native hopb (hopb_use_v2).
+  if (recon && hopb_use_v2() && Ns % NS_PER_BLOCK == 0 && (Nst_pad % NWP == 0)) {
+    dim3 block(NWP, NS_PER_BLOCK);
+    dim3 grid (Nst_pad / NWP, Ns / NS_PER_BLOCK);
+    mult_domainwall_5din_eo_hopb_hyb_dirac_5D_v2_kernel<<<grid, block>>>(
+        vp_dev, up_dev, wp_dev, Ns,
+        bc[0], bc[1], bc[2], bc[3],
+        Nx, Ny, Nz, Nt,
+        ieo, jeo,
+        do_comm[0], do_comm[1], do_comm[2], do_comm[3],
+        Nst_pad, jgm5);
+    cudaDeviceSynchronize();
+    return;
+  }
+
+  auto kernel = recon ? mult_domainwall_5din_eo_hopb_hyb_dirac_5D_kernel<true>
+                      : mult_domainwall_5din_eo_hopb_hyb_dirac_5D_kernel<false>;
+  kernel<<<gridSize, blockSize>>>(
       vp_dev, up_dev, wp_dev, Ns,
       bc[0], bc[1], bc[2], bc[3],
       Nx, Ny, Nz, Nt,

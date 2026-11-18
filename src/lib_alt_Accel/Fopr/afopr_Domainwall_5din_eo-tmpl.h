@@ -383,32 +383,27 @@ void AFopr_Domainwall_5din_eo<AFIELD>::set_parameters(
   vout.general(m_vl, "  su3_reconstruction = %s\n",
                m_su3_reconstruction ? "true" : "false");
 
-  // optional: hybrid FP64 emulation of the hopping term. "float_float" keeps
-  // the double storage and computes only hopb in float-float (5dir, LU_inv
-  // and BLAS stay native double). Default "double" = native kernel.
+  // multiword_mode (copied here from the Solver section by the caller):
+  // "lowendgpu" keeps the double storage and computes only hopb in
+  // float-float (5dir, LU_inv and BLAS stay native double). FP, DW and TW are
+  // handled through set_mw_mode; for them the hopping arithmetic is native.
   m_hop_float_float = false;
-  std::string hop_arith_str = "double";
-  if (!params.fetch_string("hopping_arithmetic", hop_arith_str)) {
-    if (hop_arith_str == "float_float") {
-      m_hop_float_float = true;
-    } else if (hop_arith_str != "double") {
-      vout.crucial(m_vl, "Error at %s: hopping_arithmetic must be double or float_float, got %s\n",
-                   class_name.c_str(), hop_arith_str.c_str());
-      exit(EXIT_FAILURE);
-    }
+  std::string mw_str;
+  if (!params.fetch_string("multiword_mode", mw_str) && mw_str == "lowendgpu") {
+    m_hop_float_float = true;
   }
   if (m_hop_float_float && sizeof(real_t) != sizeof(double)) {
-    vout.crucial(m_vl, "Error at %s: hopping_arithmetic = float_float needs a double field (field_type double_eo)\n",
+    vout.crucial(m_vl, "Error at %s: multiword_mode = lowendgpu needs a double field (field_type double_eo)\n",
                  class_name.c_str());
     exit(EXIT_FAILURE);
   }
   if (m_hop_float_float && m_impl != "5d") {
-    vout.crucial(m_vl, "Error at %s: hopping_arithmetic = float_float is implemented for code_implementation 5d only\n",
+    vout.crucial(m_vl, "Error at %s: multiword_mode = lowendgpu is implemented for code_implementation 5d only\n",
                  class_name.c_str());
     exit(EXIT_FAILURE);
   }
-  vout.general(m_vl, "  hopping_arithmetic = %s\n",
-               m_hop_float_float ? "float_float (double storage)" : "double");
+  vout.general(m_vl, "  hopping arithmetic = %s\n",
+               m_hop_float_float ? "float_float, double storage (lowendgpu)" : "native");
 
   // keep the un-truncated double coefficients for extended-precision mode.
   m_M0_d = M0; m_mq_d = mq; m_alpha_d = alpha;
@@ -1387,7 +1382,7 @@ void AFopr_Domainwall_5din_eo<AFIELD>::D_eo(AFIELD& v,
     } else if(m_impl == "5d" && m_hop_float_float){
       BridgeACC::mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
                          vp, up, yp, m_Ns, m_bc2,
-                         m_Nsize, do_comm, ieo, jeo, 0);
+                         m_Nsize, do_comm, ieo, jeo, 0, m_su3_reconstruction);
     } else if(m_impl == "5d"){
       BridgeACC::mult_domainwall_5din_eo_hopb_dirac_5d(
                          vp, up, yp, m_Ns, m_bc2,
@@ -1545,7 +1540,7 @@ void AFopr_Domainwall_5din_eo<AFIELD>::Ddag_eo(AFIELD& v,
     } else if(m_impl == "5d" && m_hop_float_float){
       BridgeACC::mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
                            yp, up, wp, m_Ns, m_bc2,
-                           m_Nsize, do_comm, ieo, jeo, 1);
+                           m_Nsize, do_comm, ieo, jeo, 1, m_su3_reconstruction);
     } else if(m_impl == "5d"){
       BridgeACC::mult_domainwall_5din_eo_hopb_dirac_5d(
                            yp, up, wp, m_Ns, m_bc2,

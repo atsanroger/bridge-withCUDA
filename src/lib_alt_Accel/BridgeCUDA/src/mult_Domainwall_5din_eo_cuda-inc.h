@@ -796,6 +796,20 @@ void mult_domainwall_5din_eo_hopb_dirac_4d(
 #define LB_BLOCKS_PER_SM 2
 #endif
 
+// hopb launcher choice. Default: v1 (one thread per (site, s); column 2 rebuilt
+// or read per su3_reconstruction). BRIDGE_HOPB_V2=1: v2 (shared-memory gauge,
+// only with su3_reconstruction true and Ns % NS_PER_BLOCK == 0), for the
+// native and the hybrid hopb alike. On the A30 (24^3x48, Ls 8) v1 was faster:
+// native 2.45 ms against 2.69 ms (median per call), hybrid 32.4 against 32.7 ms.
+#ifndef HOPB_USE_V2_DEFINED
+#define HOPB_USE_V2_DEFINED
+static inline bool hopb_use_v2()
+{
+  static const bool v = [] { const char *e = getenv("BRIDGE_HOPB_V2"); return e != nullptr && atoi(e) != 0; }();
+  return v;
+}
+#endif
+
 #define U_UP_LOAD_AND_SYNC(isg) do { \
   __syncthreads(); \
   if (is_local == 0) { \
@@ -918,6 +932,9 @@ void mult_domainwall_5din_eo_hopb_dirac_5D_v2_kernel(
 }
 
 //====================================================================
+// RECON (YAML su3_reconstruction): rebuild column 2 of each link from columns
+// 0 and 1 instead of reading it (12 of the 18 stored reals per link).
+template<bool RECON>
 __global__
 void mult_domainwall_5din_eo_hopb_dirac_5D_kernel(
   real_t * __restrict__ vp, const real_t * __restrict__ up, const real_t * __restrict__ wp,
@@ -1028,9 +1045,9 @@ void mult_domainwall_5din_eo_hopb_dirac_5d(
   int do_comm_z = do_comm[2];
   int do_comm_t = do_comm[3];
 
-  // su3_reconstruction (YAML) -> v2 kernel: caches 12 gauge reals in shared memory
-  // and rebuilds column 2 (SU3_3RD_ROW_RECONST). recon=false uses v1 (full link).
-  if (recon && Ns % NS_PER_BLOCK == 0 && (Nst_pad % NWP == 0)) {
+  // v1 by default; v2 (shared-memory gauge) only with BRIDGE_HOPB_V2=1, see
+  // hopb_use_v2(). v1 rebuilds column 2 when recon is true, reads it when false.
+  if (recon && hopb_use_v2() && Ns % NS_PER_BLOCK == 0 && (Nst_pad % NWP == 0)) {
     dim3 block(NWP, NS_PER_BLOCK);
     dim3 grid (Nst_pad / NWP, Ns / NS_PER_BLOCK);
     mult_domainwall_5din_eo_hopb_dirac_5D_v2_kernel<<<grid, block>>>(
@@ -1047,7 +1064,9 @@ void mult_domainwall_5din_eo_hopb_dirac_5d(
   int blockSize = VECTOR_LENGTH;
   int gridSize  = (Nst_pad * Ns + blockSize - 1) / blockSize;
 
-  mult_domainwall_5din_eo_hopb_dirac_5D_kernel<<<gridSize, blockSize>>>(
+  auto kernel = recon ? mult_domainwall_5din_eo_hopb_dirac_5D_kernel<true>
+                      : mult_domainwall_5din_eo_hopb_dirac_5D_kernel<false>;
+  kernel<<<gridSize, blockSize>>>(
       vp_dev, up_dev, wp_dev, Ns,
       bc_x, bc_y, bc_z, bc_t,
       Nx, Ny, Nz, Nt,

@@ -117,7 +117,7 @@ void mult_domainwall_5din_eo_hopb_dirac_5d(
 void mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
     double *vp, double *up, double *wp, int Ns, int *bc,
     int *Nsize, int *do_comm, int ieo, int jeo,
-    int jgm5);
+    int jgm5, bool recon);
 
 void mult_domainwall_5din_eo_hop1_dirac(
         double * buf1_xp, double * buf1_xm,
@@ -498,7 +498,7 @@ void mult_domainwall_5din_eo_hopb_dirac_5d(
 void mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
     float *vp, float *up, float *wp, int Ns, int *bc,
     int *Nsize, int *do_comm, int ieo, int jeo,
-    int jgm5);
+    int jgm5, bool recon);
 
 void mult_domainwall_5din_eo_hop1_dirac(
         float * buf1_xp, float * buf1_xm,

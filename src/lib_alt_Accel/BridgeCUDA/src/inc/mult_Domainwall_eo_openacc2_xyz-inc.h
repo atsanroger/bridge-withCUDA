@@ -110,21 +110,21 @@
       v2_24 =  bc2 * wt1i;
       v2_34 = -bc2 * wt1r;
 
-#ifdef SU3_3RD_ROW_RECONST
+      if (RECON) {  // su3_reconstruction: rebuild column 2 from columns 0, 1
       u12 = EXT_IMG_R(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u13 = EXT_IMG_I(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u14 = EXT_IMG_R(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u15 = EXT_IMG_I(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u16 = EXT_IMG_R(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
       u17 = EXT_IMG_I(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
-#else
+      } else {
       u12 = u_up[IDX2_G_R(0,2,isg)];
       u13 = u_up[IDX2_G_I(0,2,isg)];
       u14 = u_up[IDX2_G_R(1,2,isg)];
       u15 = u_up[IDX2_G_I(1,2,isg)];
       u16 = u_up[IDX2_G_R(2,2,isg)];
       u17 = u_up[IDX2_G_I(2,2,isg)];
-#endif
+      }
 
       wt1r = MULT_GXr(u12, u13, u14, u15, u16, u17,
                       vt1_0, vt1_1, vt1_2, vt1_3, vt1_4, vt1_5);
@@ -235,21 +235,21 @@
       v2_24 += -bc2 * wt1i;
       v2_34 += +bc2 * wt1r;
 
-#ifdef SU3_3RD_ROW_RECONST
+      if (RECON) {  // su3_reconstruction: rebuild column 2 from columns 0, 1
       u12 = EXT_IMG_R(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u13 = EXT_IMG_I(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u14 = EXT_IMG_R(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u15 = EXT_IMG_I(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u16 = EXT_IMG_R(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
       u17 = EXT_IMG_I(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
-#else
+      } else {
       u12 = u_dn[IDX2_G_R(2,0,isg)];
       u13 = u_dn[IDX2_G_I(2,0,isg)];
       u14 = u_dn[IDX2_G_R(2,1,isg)];
       u15 = u_dn[IDX2_G_I(2,1,isg)];
       u16 = u_dn[IDX2_G_R(2,2,isg)];
       u17 = u_dn[IDX2_G_I(2,2,isg)];
-#endif
+      }
 
       wt1r = MULT_GDXr(u12, u13, u14, u15, u16, u17,
                        vt1_0, vt1_1, vt1_2, vt1_3, vt1_4, vt1_5);
@@ -363,21 +363,21 @@
       v2_24 +=  bc2 * wt1r;
       v2_34 +=  bc2 * wt1i;
 
-#ifdef SU3_3RD_ROW_RECONST
+      if (RECON) {  // su3_reconstruction: rebuild column 2 from columns 0, 1
       u12 = EXT_IMG_R(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u13 = EXT_IMG_I(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u14 = EXT_IMG_R(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u15 = EXT_IMG_I(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u16 = EXT_IMG_R(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
       u17 = EXT_IMG_I(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
-#else
+      } else {
       u12 = u_up[IDX2_G_R(0,2,isg)];
       u13 = u_up[IDX2_G_I(0,2,isg)];
       u14 = u_up[IDX2_G_R(1,2,isg)];
       u15 = u_up[IDX2_G_I(1,2,isg)];
       u16 = u_up[IDX2_G_R(2,2,isg)];
       u17 = u_up[IDX2_G_I(2,2,isg)];
-#endif
+      }
 
       wt1r = MULT_GXr(u12, u13, u14, u15, u16, u17,
                       vt1_0, vt1_1, vt1_2, vt1_3, vt1_4, vt1_5);
@@ -489,21 +489,21 @@
       v2_24 += -bc2 * wt1r;
       v2_34 += -bc2 * wt1i;
 
-#ifdef SU3_3RD_ROW_RECONST
+      if (RECON) {  // su3_reconstruction: rebuild column 2 from columns 0, 1
       u12 = EXT_IMG_R(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u13 = EXT_IMG_I(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u14 = EXT_IMG_R(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u15 = EXT_IMG_I(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u16 = EXT_IMG_R(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
       u17 = EXT_IMG_I(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
-#else
+      } else {
       u12 = u_dn[IDX2_G_R(2,0,isg)];
       u13 = u_dn[IDX2_G_I(2,0,isg)];
       u14 = u_dn[IDX2_G_R(2,1,isg)];
       u15 = u_dn[IDX2_G_I(2,1,isg)];
       u16 = u_dn[IDX2_G_R(2,2,isg)];
       u17 = u_dn[IDX2_G_I(2,2,isg)];
-#endif
+      }
 
       wt1r = MULT_GDXr(u12, u13, u14, u15, u16, u17,
                        vt1_0, vt1_1, vt1_2, vt1_3, vt1_4, vt1_5);
@@ -618,21 +618,21 @@
       v2_24 += -bc2 * wt2i;
       v2_34 +=  bc2 * wt2r;
 
-#ifdef SU3_3RD_ROW_RECONST
+      if (RECON) {  // su3_reconstruction: rebuild column 2 from columns 0, 1
       u12 = EXT_IMG_R(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u13 = EXT_IMG_I(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u14 = EXT_IMG_R(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u15 = EXT_IMG_I(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u16 = EXT_IMG_R(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
       u17 = EXT_IMG_I(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
-#else
+      } else {
       u12 = u_up[IDX2_G_R(0,2,isg)];
       u13 = u_up[IDX2_G_I(0,2,isg)];
       u14 = u_up[IDX2_G_R(1,2,isg)];
       u15 = u_up[IDX2_G_I(1,2,isg)];
       u16 = u_up[IDX2_G_R(2,2,isg)];
       u17 = u_up[IDX2_G_I(2,2,isg)];
-#endif
+      }
 
       wt1r = MULT_GXr(u12, u13, u14, u15, u16, u17,
                       vt1_0, vt1_1, vt1_2, vt1_3, vt1_4, vt1_5);
@@ -744,21 +744,21 @@
       v2_24 +=  bc2 * wt2i;
       v2_34 += -bc2 * wt2r;
 
-#ifdef SU3_3RD_ROW_RECONST
+      if (RECON) {  // su3_reconstruction: rebuild column 2 from columns 0, 1
       u12 = EXT_IMG_R(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u13 = EXT_IMG_I(u_2, u_3, u_4, u_5, u_8, u_9, u10, u11);
       u14 = EXT_IMG_R(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u15 = EXT_IMG_I(u_4, u_5, u_0, u_1, u10, u11, u_6, u_7);
       u16 = EXT_IMG_R(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
       u17 = EXT_IMG_I(u_0, u_1, u_2, u_3, u_6, u_7, u_8, u_9);
-#else
+      } else {
       u12 = u_dn[IDX2_G_R(2,0,isg)];
       u13 = u_dn[IDX2_G_I(2,0,isg)];
       u14 = u_dn[IDX2_G_R(2,1,isg)];
       u15 = u_dn[IDX2_G_I(2,1,isg)];
       u16 = u_dn[IDX2_G_R(2,2,isg)];
       u17 = u_dn[IDX2_G_I(2,2,isg)];
-#endif
+      }
 
       wt1r = MULT_GDXr(u12, u13, u14, u15, u16, u17,
                        vt1_0, vt1_1, vt1_2, vt1_3, vt1_4, vt1_5);
