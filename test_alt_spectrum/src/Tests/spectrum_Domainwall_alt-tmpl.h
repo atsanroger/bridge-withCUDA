@@ -28,6 +28,18 @@
 
 #include "lib_alt/Measurements/Fermion/fprop_alt_Standard_lex.h"
 #include "lib_alt/Measurements/Fermion/fprop_alt_Standard_eo.h"
+#include <cstdlib>
+
+// Benchmark switches (environment variables). Unset = original behavior.
+//   BRIDGE_PERF_NREP : repetitions in mult_performance (default 200)
+//   BRIDGE_NSOLVE    : number of color-spin sources to solve (default Nc*Nd);
+//                      below Nc*Nd the correlator part is skipped
+//   BRIDGE_SKIP_CHECK: skip the operator check against corelib
+static inline int bench_env_int(const char *name, int dflt)
+{
+  const char *v = std::getenv(name);
+  return (v && *v) ? std::atoi(v) : dflt;
+}
 #include "lib_alt/Measurements/Fermion/fprop_alt_Standard_lex_Mixedprec.h"
 
 
@@ -254,8 +266,58 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
   // setup fermion propgator computer.
   Parameters params_solver = params_all.lookup("Solver");
 
+  // Solver.multiword_mode selects the whole precision setup:
+  //   FP         native arithmetic; field_type from the yaml (unchanged)
+  //   lowendgpu  double storage, float-float arithmetic in the hopping
+  //              kernel only (5dir, LU_inv, BLAS native double)
+  //                                                  -> double_eo, solver FP
+  //   DW / TW    float-float / float-triple everywhere
+  //                                                  -> float_eo, extended_precision true
+  // For lowendgpu, DW and TW, field_type and Fopr.extended_precision follow
+  // from it; an explicit value that contradicts it is an error.
+  {
+    std::string mw = "FP";
+    params_solver.fetch_string("multiword_mode", mw);
+    std::string field, ext, hop = "double";
+    if (mw == "FP") {
+      field = mode;                      // keep the caller's field_type
+    } else if (mw == "lowendgpu") {
+      field = "double_eo"; hop = "float_float";
+      params_solver.set_string("multiword_mode", "FP");
+    } else if (mw == "DW" || mw == "TW") {
+      field = "float_eo";  ext = "true";
+    } else {
+      vout.crucial(m_vl, "Error at %s: multiword_mode must be FP, lowendgpu, DW or TW, got %s\n",
+                   test_name.c_str(), mw.c_str());
+      exit(EXIT_FAILURE);
+    }
+    std::string field_yaml;
+    if (mw != "FP" && !params_test.fetch_string("field_type", field_yaml) && field_yaml != field) {
+      vout.crucial(m_vl, "Error at %s: field_type %s contradicts multiword_mode %s (needs %s); "
+                   "remove field_type from the yaml\n",
+                   test_name.c_str(), field_yaml.c_str(), mw.c_str(), field.c_str());
+      exit(EXIT_FAILURE);
+    }
+    std::string ext_yaml;
+    if (!ext.empty()) {
+      if (!params_fopr.fetch_string("extended_precision", ext_yaml) && ext_yaml != ext) {
+        vout.crucial(m_vl, "Error at %s: extended_precision %s contradicts multiword_mode %s (needs %s)\n",
+                     test_name.c_str(), ext_yaml.c_str(), mw.c_str(), ext.c_str());
+        exit(EXIT_FAILURE);
+      }
+      params_fopr.set_string("extended_precision", ext);
+    }
+    params_fopr.set_string("hopping_arithmetic", hop);
+    mode = field;
+    vout.general(m_vl, "multiword_mode = %s: field_type = %s, extended_precision = %s, hopping_arithmetic = %s\n",
+                 mw.c_str(), field.c_str(), ext.empty() ? "(yaml/default)" : ext.c_str(), hop.c_str());
+  }
+
   // To confirm the alt operator works same as corelib.
-  if(mode == "double"){
+  // BRIDGE_SKIP_CHECK set: skip this CPU-reference check (benchmark runs).
+  if (std::getenv("BRIDGE_SKIP_CHECK")) {
+    vout.general(m_vl, "  BRIDGE_SKIP_CHECK set: operator check against corelib skipped\n");
+  } else if(mode == "double"){
     check_operator<AField<double, IMPL> >(fopr, params_fopr);
   }else if (mode == "double_eo"){
     check_operator_eo<AField<double, IMPL> >(fopr, params_fopr);
@@ -330,7 +392,8 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
   }
 
   fprop->set_config(U.get());
-  int measure_times = 200;
+  int measure_times = bench_env_int("BRIDGE_PERF_NREP", 200);
+  vout.general(m_vl, "  BRIDGE_PERF_NREP = %d\n", measure_times);
 
   if (mode == "double_eo" || mode == "float_eo") {
     fprop->mult_performance("Dee_inv", measure_times);
@@ -382,12 +445,15 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
 
   vout.general(m_vl, "\n");
   vout.general(m_vl, "Solving quark propagator:\n");
+  const int nsolve = bench_env_int("BRIDGE_NSOLVE", Nc * Nd);
+  vout.general(m_vl, "  BRIDGE_NSOLVE = %d (of %d)\n", nsolve, Nc * Nd);
   vout.general(m_vl, "  color spin   Nconv      diff           diff2\n");
 
 
     for (int ispin = 0; ispin < Nd; ++ispin) {
       for (int icolor = 0; icolor < Nc; ++icolor) {
         int idx = icolor + Nc * ispin;
+        if (idx >= nsolve) continue;
         source->set(b, idx);
 
         // set 5d source as
@@ -464,6 +530,12 @@ int Spectrum_Domainwall_alt<IMPL>::hadron_2ptFunction(
     }
 
   fprop->report_performance();
+
+  if (nsolve < Nc * Nd) {
+    vout.general(m_vl, "BRIDGE_NSOLVE < %d: correlator and m_res skipped.\n", Nc * Nd);
+    timer->report();
+    return 0;
+  }
 
 
   //- meson correlators
@@ -647,7 +719,7 @@ int Spectrum_Domainwall_alt<IMPL>::check_operator(
   vout.general(m_vl, "norm2(y5)  = %f\n", y5norm);
   vout.general(m_vl, "norm2(z5)  = %f\n", z5norm);
   vout.general(m_vl, "norm2(axq) = %f\n", axqnorm);
-  vout.general(m_vl, "diff2 = %f\n", diff2);
+  vout.general(m_vl, "diff2 = %.6e\n", diff2);
 
   double epsilon = 1.e-16;
   if (diff2 < epsilon) return 0;
@@ -815,7 +887,7 @@ int Spectrum_Domainwall_alt<IMPL>::check_operator_eo(
     vout.general(m_vl, "norm2(y5)  = %f\n", y5norm_D);
     vout.general(m_vl, "norm2(z5)  = %f\n", z5norm_D);
     vout.general(m_vl, "norm2(axq) = %f\n", axqnorm_D);
-    vout.general(m_vl, "diff2 = %f\n", diff2_D);
+    vout.general(m_vl, "diff2 = %.6e\n", diff2_D);
 
     if (diff2_D > 1e-16) return 1;
   }
@@ -862,7 +934,7 @@ int Spectrum_Domainwall_alt<IMPL>::check_operator_eo(
     vout.general(m_vl, "norm2(y5)  = %f\n", y5norm_Ddag);
     vout.general(m_vl, "norm2(z5)  = %f\n", z5norm_Ddag);
     vout.general(m_vl, "norm2(axq) = %f\n", axqnorm_Ddag);
-    vout.general(m_vl, "diff2 = %f\n", diff2_Ddag);
+    vout.general(m_vl, "diff2 = %.6e\n", diff2_Ddag);
 
     if (diff2_Ddag > 1e-16) return 1;
   }

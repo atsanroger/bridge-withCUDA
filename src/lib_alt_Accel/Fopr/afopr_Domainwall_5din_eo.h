@@ -74,6 +74,7 @@ class AFopr_Domainwall_5din_eo : public AFopr<AFIELD>
   AFIELD m_Ueo_mid;  //!< mid word of TW gauge link (allocated only when TW path uses TW-gauge).
   bool   m_extended_precision;   //!< use float-float/double-double gauge links in QDW.
   bool   m_su3_reconstruction = false;  //!< QTW hopping: reconstruct SU(3) 3rd column (YAML su3_reconstruction). Off by default (regressed on RTX 3080).
+  bool   m_hop_float_float = false;  //!< hybrid: double storage, float-float arithmetic in hopb (YAML hopping_arithmetic: float_float).
 
   AFIELD m_w1, m_v1, m_v2;        //!< working vectors
   using MWMode = typename AFopr<AFIELD>::MWMode;

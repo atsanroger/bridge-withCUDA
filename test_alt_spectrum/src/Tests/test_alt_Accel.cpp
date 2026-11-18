@@ -10,6 +10,7 @@
 #ifdef USE_ALT_ACCEL
 
 #include "lib_alt_Accel/bridge_alt_accel.h"
+#include <cstdlib>
 #define IMPL ACCEL
 
 
@@ -54,6 +55,8 @@ int Test_alt_Accel::test_all()
   // result += test_Solve_Domainwall_PVprec_BiCGStab();
   // result += test_Solve_Domainwall_PVprec_Propagator(); // FLOAT GMRES-on-A: convergence (nconv) + true residual vs alpha
    result += test_Spectrum_Domainwall_5din();           // CGNE 2pt + m_res (reference; non-eo vs eo alpha cross-check)
+   // BRIDGE_ONLY_5DIN set: skip the PVprec test (benchmark runs)
+   if (!std::getenv("BRIDGE_ONLY_5DIN"))
    result += test_Solve_Domainwall_PVprec_2pt();        // A-based GMRES 2pt + m_res: confirm vs preset 4.58e-01 / mres 1.87e-3
   // result += test_Spectrum_Domainwall();
   // result += test_Spectrum_OptimalDomainwall();

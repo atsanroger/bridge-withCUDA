@@ -31,6 +31,7 @@ namespace BridgeACC {
 #include "src/mult_Domainwall_5din_eo_cuda-inc.h"
 #include "src/mult_Domainwall_5din_cuda2-inc.h"
 #include "src/mult_Domainwall_5din_eo_inv_cuda-inc.h"
+#include "src/mult_Domainwall_5din_eo_cuda_hyb-inc.h"   // double storage, float-float hopping
 #include "src/mult_Domainwall_5din_cuda_qdw-inc.h"
 #include "src/mult_Domainwall_5din_eo_cuda_qdw-inc.h"
 #include "src/mult_Domainwall_5din_eo_inv_cuda_qdw-inc.h"

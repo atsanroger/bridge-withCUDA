@@ -30,6 +30,7 @@ namespace BridgeACC {
 #include "src/mult_Domainwall_5din_eo_cuda-inc.h"
 #include "src/mult_Domainwall_5din_cuda2-inc.h"
 #include "src/mult_Domainwall_5din_eo_inv_cuda-inc.h"
+#include "src/mult_Domainwall_5din_eo_cuda_hyb-inc.h"   // double storage, float-float hopping
 
 // QDW EO kernels — float-base (float-float) implementation. The kernels are
 // parameterized on real_t/real4/real2, so including them here (real_t=float)

@@ -113,6 +113,12 @@ void mult_domainwall_5din_eo_hopb_dirac_5d(
     int *Nsize, int *do_comm, int ieo, int jeo,
     int jgm5, bool recon);
 
+// hybrid: native storage, float-float arithmetic inside the hopping kernel
+void mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
+    double *vp, double *up, double *wp, int Ns, int *bc,
+    int *Nsize, int *do_comm, int ieo, int jeo,
+    int jgm5);
+
 void mult_domainwall_5din_eo_hop1_dirac(
         double * buf1_xp, double * buf1_xm,
         double * buf1_yp, double * buf1_ym,
@@ -487,6 +493,12 @@ void mult_domainwall_5din_eo_hopb_dirac_5d(
     float *vp, float *up, float *wp, int Ns, int *bc,
     int *Nsize, int *do_comm, int ieo, int jeo,
     int jgm5, bool recon);
+
+// hybrid: native storage, float-float arithmetic inside the hopping kernel
+void mult_domainwall_5din_eo_hopb_hyb_dirac_5d(
+    float *vp, float *up, float *wp, int Ns, int *bc,
+    int *Nsize, int *do_comm, int ieo, int jeo,
+    int jgm5);
 
 void mult_domainwall_5din_eo_hop1_dirac(
         float * buf1_xp, float * buf1_xm,
