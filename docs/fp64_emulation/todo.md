@@ -1,4 +1,4 @@
-# FP64 emulation TODO(eo-DWF CGNE,branch `feat/no-amg`)
+# FP64 emulation TODO(eo-DWF CGNE,branch `feat/double-emulation`)
 
 計畫內容見 `note_zh.md`(英文版 `note_en.md`)。
 
